@@ -11,13 +11,22 @@ import { polygon } from "thirdweb/chains";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
+interface NFTMetadata {
+  image: string; // Asegúrate de que `image` sea de tipo `string`
+  uri: string;
+  name?: string; // `name` es opcional
+  description?: string; // `description` es opcional
+  animation_url?: string;
+  external_url?: string;
+  background_color?: string;
+  properties?: Record<string, unknown>;
+  attributes?: Record<string, unknown>;
+  image_url?: string;
+}
+
 interface NFT {
-  metadata: {
-    image: string;
-    name: string;
-    description: string;
-  };
-  quantityOwned: number;
+  metadata: NFTMetadata;
+  quantityOwned: number; // Cambiado a `number` para coincidir con tu interfaz
 }
 
 export default function Profile() {
@@ -46,7 +55,20 @@ export default function Profile() {
             count: 10,
             address: walletAddress,
           });
-          setNfts(fetchedNFTs);
+
+          // Asegurar que las propiedades opcionales tengan valores por defecto
+          const validatedNFTs = fetchedNFTs.map((nft) => ({
+            ...nft,
+            metadata: {
+              ...nft.metadata,
+              image: nft.metadata.image || "", // Si es undefined, se asigna un string vacío
+              name: nft.metadata.name || "Unnamed NFT", // Valor por defecto para `name`
+              description: nft.metadata.description || "No description available", // Valor por defecto para `description`
+            },
+            quantityOwned: Number(nft.quantityOwned), // Convertir `bigint` a `number`
+          }));
+
+          setNfts(validatedNFTs);
         } catch (error) {
           console.error("Error fetching NFTs:", error);
         } finally {
@@ -108,7 +130,7 @@ export default function Profile() {
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image
                       src={formatIpfsUrl(nft.metadata.image)}
-                      alt={nft.metadata.name}
+                      alt={nft.metadata.name || "Unnamed NFT"}
                       fill
                       style={{ objectFit: "contain" }}
                       className="rounded-t-2xl transition-transform duration-300 ease-in-out transform hover:scale-110"
@@ -116,13 +138,13 @@ export default function Profile() {
                   </div>
                   <div className="p-4 flex flex-col flex-1 overflow-hidden">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2 truncate">
-                      {nft.metadata.name}
+                      {nft.metadata.name || "Unnamed NFT"}
                     </h2>
                     <p className="text-indigo-600 font-semibold mb-4">
                       Owned: {nft.quantityOwned.toString()}
                     </p>
                     <p className="text-gray-600 mb-4 flex-grow overflow-hidden">
-                      {nft.metadata.description}
+                      {nft.metadata.description || "No description available"}
                     </p>
                   </div>
                 </div>
